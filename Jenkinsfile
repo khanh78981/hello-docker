@@ -1,5 +1,5 @@
 pipeline {
-  agent any
+  agent { label 'docker' }
   environment {
     REGISTRY = "registry:5000"
     IMAGE    = "${env.REGISTRY}/hello:${env.GIT_COMMIT?.take(7) ?: env.BUILD_NUMBER}"
