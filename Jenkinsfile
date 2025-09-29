@@ -1,7 +1,7 @@
 pipeline {
   agent { label 'docker' }
   environment {
-    REGISTRY = "registry:5000"
+    REGISTRY = "192.168.0.100:5000"
     IMAGE    = "${env.REGISTRY}/hello:${env.GIT_COMMIT?.take(7) ?: env.BUILD_NUMBER}"
     APP_PORT = "32080"
     CONTAINER = "hello-web"
