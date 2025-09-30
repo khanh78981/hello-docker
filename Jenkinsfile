@@ -56,8 +56,20 @@ pipeline {
       }
     }
 
-    stage('Build image')   { steps { sh 'docker build -t "$IMAGE" .' } }
-    stage('Push image')    { steps { sh 'docker push "$IMAGE"'       } }
+    stage('Build image')   { 
+      steps { sh '''
+      docker build -t "$IMAGE" . 
+      docker tag "$IMAGE" "${REGISTRY}/hello:latest"
+      '''
+      } 
+    }
+    stage('Push image')    { 
+      steps { sh '''
+      docker push "$IMAGE"     
+      docker push "${REGISTRY}/hello:latest"
+      '''
+      } 
+    }
 
     stage('Run container') {
       steps {
