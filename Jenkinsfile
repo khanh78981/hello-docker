@@ -76,7 +76,7 @@ pipeline {
         sh '''
           docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
           docker run -d --name "$CONTAINER" --restart unless-stopped \
-            -p 192.168.0.100:"$APP_PORT":80 "$IMAGE"
+            -p 192.168.0.100:"$APP_PORT":80 "${REGISTRY}/hello:latest"
           sleep 2
         '''
       }
