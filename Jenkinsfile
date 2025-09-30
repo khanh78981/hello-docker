@@ -6,10 +6,13 @@ pipeline {
   }
 
   environment {
-    DOCKER_HOST = 'tcp://docker-proxy:2375'
-    REGISTRY   = "${params.REGISTRY}"
-    APP_PORT   = "32080"
-    CONTAINER  = "hello-web"
+    REGISTRY  = "${params.REGISTRY}"
+    IMAGE     = "${env.REGISTRY}/hello:${env.GIT_COMMIT?.take(7) ?: env.BUILD_NUMBER}"
+    APP_PORT  = "32080"
+    CONTAINER = "hello-web"
+
+    DOCKER_HOST    = 'tcp://docker-proxy:2375'
+    DOCKER_BUILDKIT = '0'
   }
 
   options { timestamps() }
