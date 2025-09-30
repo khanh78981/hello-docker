@@ -92,6 +92,14 @@ pipeline {
         '''
       }
     }
+    stage('Tag latest') {
+      when { branch 'main' }
+      steps { sh 'docker tag "$IMAGE" "${REGISTRY}/hello:latest"' }
+    }
+    stage('Push latest') {
+      when { branch 'main' }
+      steps { sh 'docker push "${REGISTRY}/hello:latest"' }
+    }
   }
 
   post {
