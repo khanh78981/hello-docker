@@ -2,7 +2,8 @@ pipeline {
   agent { label 'docker' }
 
   parameters {
-    string(name: 'REGISTRY', defaultValue: '192.168.0.100:5000', description: 'Docker registry (vd: 192.168.0.100:5000)')
+    string(name: 'REGISTRY', defaultValue: '192.168.0.100:5000',
+           description: 'Docker registry (vd: 192.168.0.100:5000)')
   }
 
   environment {
@@ -11,14 +12,13 @@ pipeline {
     APP_PORT  = "32080"
     CONTAINER = "hello-web"
 
-    DOCKER_HOST    = 'tcp://docker-proxy:2375'
+    DOCKER_HOST     = 'tcp://docker-proxy:2375'
     DOCKER_BUILDKIT = '0'
   }
 
   options { timestamps() }
 
   stages {
-
     stage('Sanity Docker via proxy') {
       steps {
         sh '''
@@ -29,9 +29,7 @@ pipeline {
       }
     }
 
-    stage('Checkout') {
-      steps { checkout scm }
-    }
+    stage('Checkout') { steps { checkout scm } }
 
     stage('Set vars') {
       steps {
@@ -56,19 +54,28 @@ pipeline {
       }
     }
 
-    stage('Build image')   { 
-      steps { sh '''
-      docker build -t "$IMAGE" . 
-      docker tag "$IMAGE" "${REGISTRY}/hello:latest"
-      '''
-      } 
+    stage('Build image') {
+      steps {
+        sh '''
+          docker build --pull -t "$IMAGE" .
+        '''
+      }
     }
-    stage('Push image')    { 
-      steps { sh '''
-      docker push "$IMAGE"     
-      docker push "${REGISTRY}/hello:latest"
-      '''
-      } 
+
+    stage('Push image') {
+      steps {
+        sh 'docker push "$IMAGE"'
+      }
+    }
+
+    stage('Tag latest') {
+      when { branch 'main' }
+      steps { sh 'docker tag "$IMAGE" "${REGISTRY}/hello:latest"' }
+    }
+
+    stage('Push latest') {
+      when { branch 'main' }
+      steps { sh 'docker push "${REGISTRY}/hello:latest"' }
     }
 
     stage('Run container') {
@@ -76,7 +83,7 @@ pipeline {
         sh '''
           docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
           docker run -d --name "$CONTAINER" --restart unless-stopped \
-            -p 192.168.0.100:"$APP_PORT":80 "${REGISTRY}/hello:latest"
+            -p 192.168.0.100:"$APP_PORT":80 "$IMAGE"
           sleep 2
         '''
       }
@@ -91,14 +98,6 @@ pipeline {
           echo "Smoke OK"
         '''
       }
-    }
-    stage('Tag latest') {
-      when { branch 'main' }
-      steps { sh 'docker tag "$IMAGE" "${REGISTRY}/hello:latest"' }
-    }
-    stage('Push latest') {
-      when { branch 'main' }
-      steps { sh 'docker push "${REGISTRY}/hello:latest"' }
     }
   }
 
