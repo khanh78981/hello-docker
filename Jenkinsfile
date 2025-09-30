@@ -12,7 +12,7 @@ pipeline {
     CONTAINER  = "hello-web"
   }
 
-  options { timestamps(); ansiColor('xterm') }
+  options { timestamps() }
 
   stages {
 
