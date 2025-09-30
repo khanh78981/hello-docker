@@ -10,7 +10,18 @@ pipeline {
     string(name: 'REGISTRY', defaultValue: '192.168.0.100:5000',
            description: 'Docker registry (vd: 192.168.0.100:5000)')
   }
+  stages {
+  stage('Sanity Docker via proxy') {
+    steps {
+      sh '''
+        echo "DOCKER_HOST=$DOCKER_HOST"
+        docker version
+        docker info | sed -n "1,20p"
+      '''
+    }
+  }
 
+// các stage cũ
   stages {
     stage('Checkout') { steps { checkout scm } }
 
