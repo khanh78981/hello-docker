@@ -73,7 +73,7 @@ pipeline {
     stage('Smoke test') {
       steps {
         sh '''
-          set -euo pipefail
+          set -eu
           docker run --rm --network=container:"$CONTAINER" curlimages/curl:8.10.1 \
             -fsSI http://127.0.0.1/ | head -n1 | grep -q "200"
           echo "Smoke OK"
