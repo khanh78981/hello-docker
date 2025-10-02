@@ -94,13 +94,21 @@ pipeline {
 
     stage('Run container') {
       steps {
-        sh '''
-          docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
-          docker run -d --name "$CONTAINER" --restart unless-stopped \
-            -p 192.168.0.100:"$APP_PORT":80 "$IMAGE"
-          sleep 2
-        '''
-      }
+    sh '''
+      set -e
+      docker rm -f "$CONTAINER" 2>/dev/null || true
+      docker run -d --name "$CONTAINER" --restart unless-stopped \
+        -p 192.168.0.100:${APP_PORT}:80 "$IMAGE"
+
+      # >>> THÊM DÒNG NÀY: cho NPM thấy container qua mạng nội bộ
+      docker network connect npm_default "$CONTAINER" || true
+
+      # smoke test nội bộ container
+      code=$(docker run --rm --network=container:${CONTAINER} \
+             curlimages/curl:8.10.1 -fsS -o /dev/null -w '%{http_code}' http://127.0.0.1/)
+      [ "$code" = "200" ]
+    '''
+  }
     }
 
     stage('Smoke test') {
