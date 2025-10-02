@@ -53,6 +53,20 @@ pipeline {
         '''
       }
     }
+    stage('Login to registry') {
+      steps {
+        withCredentials([usernamePassword(
+          credentialsId: 'reg-creds',
+          usernameVariable: 'REG_USER',
+          passwordVariable: 'REG_PASS'
+        )]) {
+          sh '''
+            set -e
+            echo "$REG_PASS" | docker login "$REGISTRY" -u "$REG_USER" --password-stdin
+          '''
+        }
+      }
+    }
 
     stage('Build image') {
       steps {
