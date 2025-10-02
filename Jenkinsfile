@@ -116,7 +116,31 @@ pipeline {
   }
 
   post {
-    always  { sh 'docker ps --format "table {{.Names}}\\t{{.Status}}\\t{{.Ports}}" || true' }
-    failure { sh 'docker logs "$CONTAINER" || true' }
+    always {
+      sh '''
+        # Liệt kê trạng thái container
+        docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}' || true
+        # Dọn rác ảnh treo để tiết kiệm dung lượng
+        docker image prune -f || true
+        # (Tùy chọn) Xóa credentials Docker nếu bạn đặt DOCKER_CONFIG trong workspace
+        rm -rf .docker || true
+      '''
+    }
+    success {
+      sh '''
+        # Kiểm tra nhanh HTTP code từ trong network của container
+        code=$(docker run --rm --network=container:${CONTAINER} \
+               curlimages/curl:8.10.1 -fsS -o /dev/null -w '%{http_code}' http://127.0.0.1/)
+        echo "Deployed OK → https://hello.lan  (HTTP code: $code)"
+      '''
+    }
+    failure {
+      sh '''
+        echo "=== Last 200 lines logs of ${CONTAINER} ==="
+        docker logs --tail=200 ${CONTAINER} || true
+        echo "=== Inspect ${CONTAINER} (first 120 lines) ==="
+        docker inspect ${CONTAINER} | sed -n '1,120p' || true
+      '''
+    }
   }
 }
